@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+xmlns:android="http://schemas.android.com/apk/res/android"
+android:padding="25dp"
+android:layout_margin="5dp"
+android:id="@+id/labName"
+android:layout_width="match_parent"
+android:layout_height="match_parent"
+    android:orientation="vertical">
+    <TextView
+        android:id="@+id/host"
+        android:text="Host"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="5dp"/>
+
+    <TextView
+        android:id="@+id/ip"
+        android:text="ip"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="5dp"/>
+
+    <TextView
+        android:id="@+id/occupied"
+        android:text="occupied"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="5dp"/>
+    </LinearLayout>
