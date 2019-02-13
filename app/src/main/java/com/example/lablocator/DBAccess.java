@@ -1,5 +1,8 @@
 package com.example.lablocator;
 
+import android.annotation.SuppressLint;
+import android.os.AsyncTask;
+import android.os.StrictMode;
 import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -8,18 +11,26 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 
-public class DBAccess {
+public class DBAccess extends AsyncTask<Void , Void , Void> {
 
     ResultSet rs;
+    private Connection conn;
 
     DBConfiguration dbc = new DBConfiguration();
-    public Connection getConnection(){
+    @SuppressLint("NewApi")
+    public Connection getConnection(String user , String password , String database, String server){
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
         Connection connection = null;
+        DBConfiguration dbc = new DBConfiguration();
         try{
-            Class.forName(dbc.getDriver()).newInstance();
-            connection = DriverManager.getConnection(dbc.getConnectionStr() , dbc.getUserName() , dbc.getPassword());
+            Class.forName("net.sourceforge.jtds.jdbc.Driver");
+            String connectionUrl = "jdbc:jtds:sqlserver://" + server + ";database=" + database + ";user=" + user + ";password=" + password + ";";
+            connection = DriverManager.getConnection(connectionUrl);
+
             //Statement stmt = connection.createStatement();
            // ResultSet test = stmt.executeQuery("select * from machine_info where host like '%1202%';");
         }catch (Exception e){
@@ -30,7 +41,40 @@ public class DBAccess {
         return connection;
     }
 
-    public ResultSet getLabs(String lab){
+    @Override
+    protected Void doInBackground(Void... voids) {
+        try{
+            //DBConfiguration dbc = new DBConfiguration();
+            conn = getConnection(dbc.getUserName() , dbc.getPassword() , dbc.getDb() , dbc.getServerName());
+            if(conn == null){
+                Log.i("A" , "Connection unsuccessful");
+            }else{
+                Log.i("A" , "Connection successful");
+            }
+        }catch (Exception e){
+            Log.d("Error" , e.getMessage());
+        }
+        return null;
+    }
+
+    public ResultSet getComputers(String lab){
+        conn = getConnection(dbc.getUserName() , dbc.getPassword() , dbc.getDb() , dbc.getServerName());
+
+        String query = "Use lablocator; select * from machine_info where host like '%" + lab + "X0%' order by host ASC;";
+        //String query = "select * from INFORMATION_SCHEMA.COLUMNS";
+        try{
+
+            Log.i("Conn status", String.valueOf(conn.isClosed()));
+            Statement stmt = conn.createStatement();
+            rs = stmt.executeQuery(query);
+        }catch(SQLException e){
+            e.printStackTrace();
+        }
+        return rs;
+    }
+}
+
+    /*public ResultSet getLabs(String lab){
 
         Connection conn = this.getConnection();
 
@@ -44,6 +88,4 @@ public class DBAccess {
             e.printStackTrace();
         }
         return this.rs;
-    }
-
-}
+    }*/

@@ -23,7 +23,7 @@ import java.util.ArrayList;
 public class MainActivity extends AppCompatActivity {
 
     Connection connect;
-    ResultSet labRS;
+    ResultSet computersRS;
     DBConfiguration dbc = new DBConfiguration();
     DBAccess db = new DBAccess();
     private Spinner labs;
@@ -35,61 +35,36 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-    @SuppressLint("NewApi")
-    private Connection getConnection(String userName , String pass ,  String DB ,  String server){
-
-        connect = null;
-        String connUrl = null;
-        try{
-            Class.forName(dbc.getDriver());
-            connUrl = dbc.getConnectionStr();
-            connect = DriverManager.getConnection(connUrl);
-        }catch(SQLException se){
-            se.printStackTrace();
-        }catch (ClassNotFoundException e){
-            e.printStackTrace();
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        return connect;
-    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-        StrictMode.setThreadPolicy(policy);
+
         populateLabs();
         DBConfiguration dbc = new DBConfiguration();
-        connect = getConnection(dbc.getUserName(), dbc.getPassword() , dbc.getConnectionStr() , dbc.getDriver());
+        //connect = getConnection(dbc.getUserName(), dbc.getPassword() , dbc.getConnectionStr() , dbc.getDriver());
 }
 
     public void loadData(View v) throws SQLException {
-        //cAdapter.clear();
-        String query = "select * from machine_info;";
-        try{
-            connect = getConnection(dbc.getUserName(), dbc.getPassword() , dbc.getConnectionStr() , dbc.getDriver());
-            Statement stmt = connect.createStatement();
-            labRS = stmt.executeQuery(query);
-            final ArrayList<Computer> computers = new ArrayList<Computer>();
-            while (labRS.next()){
-                Computer c = new Computer(labRS.getString("ip") , labRS.getString("host") , labRS.getBoolean("occupied"));
-                computers.add(c);
+        DBAccess dba = new DBAccess();
+        computersRS = dba.getComputers(selectedLab);
+        ArrayList<Computer> listOfComputers = new ArrayList<Computer>();
+        if (computersRS == null){
+            Toast.makeText(this , "Null results" , Toast.LENGTH_LONG).show();
+        }else{
+            //Create new computers
+            while(computersRS.next()){
+               Computer c = new Computer(computersRS.getString("ip") , computersRS.getString("host") , computersRS.getBoolean("occupied"));
+                listOfComputers.add(c);
+                cAdapter = new ComputerAdapter(this , listOfComputers);
+                computerListView = (ListView)findViewById(R.id.computerList);
+                computerListView.setAdapter(cAdapter);
+               // System.out.println("***************Test:" + computersRS.getString("TABLE_CATALOG") + " SCHEMA :" + computersRS.getString("TABLE_SCHEMA") + " NAME: " + computersRS.getString("TABLE_NAME") );
             }
 
-            cAdapter = new ComputerAdapter(this , computers);
-            computerListView = (ListView)findViewById(R.id.computerList);
-            computerListView.setAdapter(cAdapter);
-
-            computerListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                    Toast.makeText(getApplicationContext() , computers.get(i).getHost(), Toast.LENGTH_LONG).show();
-                }
-            });
-        }catch (SQLException e){
-            e.printStackTrace();
+            Toast.makeText(this , listOfComputers.get(0).getHost() , Toast.LENGTH_LONG).show();
         }
+
 
     }
 
@@ -126,7 +101,6 @@ public class MainActivity extends AppCompatActivity {
                 selectedLab = labNames.get(i);
                 ((TextView)adapterView.getChildAt(0)).setTextColor(Color.parseColor("#f7f7f7"));
                 ((TextView)adapterView.getChildAt(0)).setTextSize(15);
-
             }
 
             @Override
